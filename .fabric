@@ -1,0 +1,53 @@
+{
+    "fabrics": [
+        {
+            "name": "run",
+            "command": "cargo",
+            "args": ["run"]
+        },
+        {
+            "name": "build",
+            "command": "cargo",
+            "args": ["build"]
+        },
+        {
+            "name": "release",
+            "command": "cargo",
+            "args": [
+                "build",
+                "--release"
+            ]
+        },
+        {
+            "name": "musl",
+            "command": "cargo",
+            "args": [
+                "build",
+                "--release",
+                "--target=x86_64-unknown-linux-musl"
+            ]
+        },
+        {
+            "name": "clean",
+            "command": "cargo",
+            "args": ["clean"]
+        },
+        {
+            "name": "install",
+            "command": "cargo",
+            "args": [
+                "install",
+                "--path",
+                "."
+            ]
+        },
+        {
+            "name": "rebuild",
+            "subfabrics": ["clean", "build"]
+        },
+        {
+            "name": "remusl",
+            "subfabrics": ["clean", "musl"]
+        }
+    ]
+}
