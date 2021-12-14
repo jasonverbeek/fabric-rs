@@ -50,20 +50,6 @@ impl Instruction {
         return false;
     }
 
-    pub fn expand(&self, fabric: &Fabric) -> Option<Vec<&Self>> {
-        let subfabrics = match &self.subfabrics {
-            None => return Some(vec![self]),
-            Some(subfabrics) => subfabrics,
-        };
-        let mut expanded: Vec<&Instruction> = Vec::new();
-        for sf in subfabrics {
-            if let Some(instr) = fabric.find_by_name(&sf) {
-                expanded.push(instr);
-            }
-        }
-        return Some(expanded);
-    }
-
     pub fn explain(&self) -> String {
         if let Some(subfabrics) = &self.subfabrics {
             return format!("(composition: {})", subfabrics.join(" "));
@@ -112,7 +98,7 @@ impl Fabric {
         self.fabrics.iter().find(|f| f.name.eq(name))
     }
 
-    fn expand_all(&'static self, tasks: &Vec<String>) -> Vec<&Instruction> {
+    fn expand_all(&self, tasks: &Vec<String>) -> Vec<&Instruction> {
         let raw_instructions = tasks
             .into_iter()
             .filter_map(|t| -> Option<&Instruction> { return self.find_by_name(&t.to_string()) });
@@ -123,21 +109,32 @@ impl Fabric {
                 expanded_instructions.push(ri);
                 continue;
             } else {
-                if let Some(instructions) = ri.expand(&self) {
-                    println!("EXP: {:#?}", instructions);
+                if let Some(instructions) = self.expand(ri) {
                     expanded_instructions.extend(instructions)
-                } else {
-                    eprintln!("NEXP {:#?}", &ri);
                 }
             }
         }
         expanded_instructions
     }
 
+    pub fn expand(&self, instruction: &Instruction) -> Option<Vec<&Instruction>> {
+        let subfabrics = match &instruction.subfabrics {
+            None => return None,
+            Some(subfabrics) => subfabrics,
+        };
+        let mut expanded: Vec<&Instruction> = Vec::new();
+        for sf in subfabrics {
+            if let Some(instr) = self.find_by_name(&sf) {
+                expanded.push(instr);
+            }
+        }
+        return Some(expanded);
+    }
+
     pub fn execute_instruction(instruction: &Instruction) -> Result<()> {
         Ok(())
     }
-    pub fn execute_all(&'static self, raw_tasks: &Vec<String>) -> Result<()> {
+    pub fn execute_all(&self, raw_tasks: &Vec<String>) -> Result<()> {
         let tasks: Vec<&Instruction> = self.expand_all(raw_tasks);
         for task in tasks {
             println!(
