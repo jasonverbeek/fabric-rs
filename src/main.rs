@@ -1,12 +1,39 @@
-use std::io::Read;
-use std::process::{exit, Command};
-use std::{env, fs::File, path::Path};
+//use std::error::Error;
+use std::fs::File;
+use std::path::Path;
+use std::process::exit;
+use std::{fmt, io::Read};
 
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-const VERSION: &'static str = "0.0.0.1";
+const VERSION: &'static str = "0.0.1";
+
+type Result<T> = std::result::Result<T, FabricError>;
+
+enum FabricError {
+    NoFabricProject,
+    NoAccessToFile,
+    InvalidFabric,
+}
+
+impl FabricError {
+    pub fn value(&self) -> &'static str {
+        match *self {
+            Self::NoFabricProject => "Current directory is not a fabric project",
+            Self::NoAccessToFile => ".fabric file exists but cannot be read.",
+            Self::InvalidFabric => ".fabric file cannot be parsed. JSON not in expected structure.",
+            _ => "Something went so wrong that I don't event know what!",
+        }
+    }
+}
+
+impl fmt::Display for FabricError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}: {}", "ERR".red().bold(), self.value())
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Instruction {
@@ -23,164 +50,54 @@ struct Fabric {
     fabrics: Vec<Instruction>,
 }
 
-fn check_fabric() -> Result<Fabric, String> {
-    if !Path::new("./.fabric").exists() {
-        return Err(format!(
-            "{}: Current directory is not a Fabric project",
-            "ERR".red().bold()
-        ));
-    }
+impl Fabric {
+    fn _execute(_instructions: &Instruction) {}
 
-    println!("{}: Found .fabric", "OK ".green().bold());
-
-    let mut file = match File::open("./.fabric") {
-        Ok(v) => v,
-        _ => return Err(format!("{}: Could not open .fabric", "ERR".red().bold())),
-    };
-
-    println!("{}: Opened .fabric", "OK ".green().bold());
-
-    let mut contents = String::new();
-    match file.read_to_string(&mut contents) {
-        Ok(_) => println!("{}: Read .fabric", "OK ".green().bold()),
-        Err(_) => return Err(format!("{}: Could not read .fabric", "ERR".red().bold())),
-    };
-    match serde_json::from_str(contents.as_str()) {
-        Ok(fabric) => {
-            println!("{}: Serialized .fabric", "OK ".green().bold());
-            Ok(fabric)
-        }
-        _ => Err(format!(
-            "{}: Could not serialize .fabric.",
-            "ERR".red().bold()
-        )),
+    fn find_by_name(&self, name: &String) -> Option<&Instruction> {
+        self.fabrics.iter().find(|f| f.name.eq(name))
     }
 }
 
-fn process_instruction(fabric: &Fabric, command: &Instruction) {
-    if command.command.is_some() && command.args.is_some() {
-        let instruction = command.clone();
-        println!();
-        let mut cmd: std::process::Child = match Command::new(instruction.command.unwrap())
-            .args(instruction.args.unwrap())
-            .spawn()
-        {
-            Ok(v) => v,
-            Err(e) => panic!("{}", e),
-        };
-        cmd.wait().unwrap();
-    } else if command.subfabrics.is_some() {
-        // TODO: subfabrics from the fabric object
-    } else {
-        println!();
-        println!(
-            "{}: Fabric '{}' is neither a command or collection of fabrics.",
-            "ERR".red().bold(),
-            command.name
-        );
-        exit(1)
+fn load_fabric_project() -> Result<Fabric> {
+    if !Path::new("./.fabric").exists() {
+        return Err(FabricError::NoFabricProject);
     }
+
+    let mut file = File::open("./.fabric").or(Err(FabricError::NoAccessToFile))?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)
+        .or(Err(FabricError::NoAccessToFile))?;
+
+    let fabric: Fabric =
+        serde_json::from_str(content.as_str()).or(Err(FabricError::InvalidFabric))?;
+
+    let mut expected_fabrics: Vec<&Instruction> = Vec::new();
+    for f in &fabric.fabrics {
+        if let Some(subfabrics) = &f.subfabrics {
+            for sf in subfabrics {
+                if let Some(instr) = fabric.find_by_name(sf) {
+                    expected_fabrics.push(instr);
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", expected_fabrics);
+
+    for f in &fabric.fabrics {
+        println!("FABRIC: {}", f.name);
+    }
+
+    Ok(fabric)
 }
 
 fn main() {
     println!("Fabric {}", VERSION);
-    println!();
-    let fabric: Fabric = match check_fabric() {
-        Ok(v) => v,
+    let _fabric: Fabric = match load_fabric_project() {
+        Ok(f) => f,
         Err(e) => {
-            println!("{}", e);
+            eprintln!("{}", e);
             exit(1)
         }
     };
-    let all_args: Vec<String> = env::args().collect();
-    let mut args: Vec<String> = Vec::from(&all_args[1..])
-        .iter()
-        .map(|i| i.to_lowercase())
-        .collect();
-    let available_cmds: Vec<Instruction> = fabric
-        .clone()
-        .fabrics
-        .into_iter()
-        .filter(|i| i.private == false)
-        .collect();
-
-    if args.len() == 0 {
-        args.push("help".to_string());
-    }
-
-    if args.len() == 1 && args[0].eq("help") {
-        println!();
-        println!("Fabric commands:");
-        println!("\t{}\t\t\t\tshow this info", "help".bold());
-        //TODO: println!("\t{}\tshow what would be executed", "describe <project command>".bold());
-
-        println!();
-        println!("Available commands for this project:");
-        available_cmds
-            .clone()
-            .into_iter()
-            .map(|i| i.name)
-            .for_each(|i| println!("\t{}", i.bold()));
-        exit(0);
-    }
-
-    let unavailable_cmds: Vec<String> = args
-        .clone()
-        .into_iter()
-        .filter(|arg| {
-            !available_cmds
-                .clone()
-                .into_iter()
-                .any(|ac| arg.eq(&ac.name))
-        })
-        .collect();
-
-    if unavailable_cmds.len() > 0 {
-        println!();
-        println!(
-            "{}: One or more commands are not accepted in this project:",
-            "ERR".red().bold()
-        );
-        unavailable_cmds
-            .iter()
-            .for_each(|uac| println!("\t{}", uac.red().italic()));
-        println!();
-        println!(
-            "{}: See `fabric help` for a list of available commands in this project.",
-            "INF".cyan().bold()
-        );
-        exit(1);
-    }
-
-    let tasks: Vec<&Instruction> = args
-        .clone()
-        .into_iter()
-        .filter_map(
-            |a| match available_cmds.clone().iter().position(|ac| a.eq(&ac.name)) {
-                Some(index) => Some(&available_cmds[index]),
-                None => None,
-            },
-        )
-        .collect();
-
-    let mut tasks2: Vec<&Instruction> = Vec::new();
-    args.clone().iter().for_each(|a| {
-        match available_cmds.clone().iter().position(|ac| a.eq(&ac.name)) {
-            Some(index) => {
-                let instr: &Instruction = &available_cmds[index];
-                if instr.command.is_some() && instr.args.is_some() {
-                    tasks2.push(instr);
-                } else {
-                    // parse subfabrics if any, otherwise invalid .fabric file
-                }
-            }
-            None => (),
-        }
-    });
-
-    println!("TASKS: {:#?}", tasks);
-    tasks
-        .clone()
-        .iter()
-        .for_each(|task| process_instruction(&fabric, &task));
 }
