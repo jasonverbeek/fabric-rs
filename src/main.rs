@@ -7,7 +7,7 @@ use std::process::exit;
 use colored::Colorize;
 use fabric::{Fabric, Result};
 
-const VERSION: &'static str = "0.0.1";
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 fn fabricate() -> Result<()> {
     let fabric: Fabric = Fabric::load_project("./.fabric")?;
