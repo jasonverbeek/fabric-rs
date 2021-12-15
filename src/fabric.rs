@@ -1,7 +1,10 @@
-use std::fmt;
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
+use std::{
+    fmt,
+    fs::File,
+    io::Read,
+    path::Path,
+    process::{Command, ExitStatus},
+};
 
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
@@ -52,9 +55,9 @@ impl Instruction {
 
     pub fn explain(&self) -> String {
         if let Some(subfabrics) = &self.subfabrics {
-            return format!("(composition: {})", subfabrics.join(" "));
+            return format!("composition of commands: {}", subfabrics.join(", "));
         } else if let (Some(command), Some(args)) = (&self.command, &self.args) {
-            return format!("({} {})", command, args.join(" "));
+            return format!("{} {}", command, args.join(" "));
         } else {
             return String::from("(unknown)");
         }
@@ -132,13 +135,23 @@ impl Fabric {
     }
 
     pub fn execute_instruction(instruction: &Instruction) -> Result<()> {
+        if let (Some(command), Some(args)) = (&instruction.command, &instruction.args) {
+            let mut cmd = Command::new(command)
+                .args(args)
+                .spawn()
+                .or(Err(FabricError::ExecutionError))?;
+            let exitcode = cmd.wait().or(Err(FabricError::ExecutionError))?;
+            if !exitcode.success() {
+                return Err(FabricError::ExecutionError);
+            }
+        }
         Ok(())
     }
     pub fn execute_all(&self, raw_tasks: &Vec<String>) -> Result<()> {
         let tasks: Vec<&Instruction> = self.expand_all(raw_tasks);
         for task in tasks {
             println!(
-                "{}: {} {}",
+                "{}: {} ({})",
                 "RUN".green().bold(),
                 &task.name,
                 task.explain().italic()
