@@ -42,8 +42,18 @@
             ]
         },
         {
+            "name": "install-musl",
+            "command": "cargo",
+            "args": [
+                "install",
+                "--target=x86_64-unknown-linux-musl",
+                "--path",
+                "."
+            ]
+        },
+        {
             "name": "rebuild",
-            "subfabrics": ["clean", "build"]
+            "subfabrics": ["clean", "release"]
         },
         {
             "name": "remusl",
