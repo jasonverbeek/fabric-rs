@@ -53,7 +53,7 @@
         },
         {
             "name": "rebuild",
-            "subfabrics": ["clean", "build"]
+            "subfabrics": ["clean", "release"]
         },
         {
             "name": "remusl",

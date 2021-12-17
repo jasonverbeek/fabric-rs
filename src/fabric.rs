@@ -1,10 +1,4 @@
-use std::{
-    fmt,
-    fs::File,
-    io::Read,
-    path::Path,
-    process::{Command, ExitStatus},
-};
+use std::{fmt, fs::File, io::Read, path::Path, process::Command};
 
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
@@ -39,7 +33,7 @@ impl fmt::Display for FabricError {
 pub struct Instruction {
     pub name: String, // name of command to be available in project: fabric <name>
     #[serde(default = "bool::default")]
-    private: bool, // wether or not to show the command in help. default false
+    pub private: bool, // wether or not to show the command in help. default false
     pub command: Option<String>, // command to run
     pub args: Option<Vec<String>>, // args to that command
     pub subfabrics: Option<Vec<String>>, // combine multiple Instructions, used instead of command+args
@@ -71,7 +65,7 @@ pub struct Fabric {
 
 impl Fabric {
     pub fn load_project(project_file: &'_ str) -> Result<Self> {
-        if !Path::new("./.fabric").exists() {
+        if !Path::new(project_file).exists() {
             return Err(FabricError::NoFabricProject);
         }
 
@@ -104,13 +98,12 @@ impl Fabric {
     fn expand_all(&self, tasks: &Vec<String>) -> Vec<&Instruction> {
         let raw_instructions = tasks
             .into_iter()
-            .filter_map(|t| -> Option<&Instruction> { return self.find_by_name(&t.to_string()) });
+            .filter_map(|t| -> Option<&Instruction> { return self.find_by_name(t) });
 
         let mut expanded_instructions: Vec<&Instruction> = Vec::new();
         for ri in raw_instructions {
             if !ri.is_composed() {
                 expanded_instructions.push(ri);
-                continue;
             } else {
                 if let Some(instructions) = self.expand(ri) {
                     expanded_instructions.extend(instructions)
@@ -147,6 +140,7 @@ impl Fabric {
         }
         Ok(())
     }
+
     pub fn execute_all(&self, raw_tasks: &Vec<String>) -> Result<()> {
         let tasks: Vec<&Instruction> = self.expand_all(raw_tasks);
         for task in tasks {

@@ -17,6 +17,9 @@ fn fabricate() -> Result<()> {
         println!("Available commands:");
         println!("{} - show this help page", "fabric".bold());
         for instr in &fabric.fabrics {
+            if &instr.private == &true {
+                continue;
+            }
             println!(
                 "{} {} - {}",
                 "fabric".bold(),
@@ -34,6 +37,7 @@ fn fabricate() -> Result<()> {
 fn main() {
     println!("Fabric version {}", VERSION);
     println!();
+
     match fabricate() {
         Ok(_) => {
             println!("{}: All fabrics completed!", "FIN".green().bold());
