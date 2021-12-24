@@ -1,0 +1,75 @@
+#+TITLE: Fabric 0.0.1 Beta
+
+Fabric is a utility to simplify building processees across multiple languages.
+
+Every language has it's own way to build/run the project and fabric aims to make all of this possible with a single command and some configuration.
+
+* Fabric project config
+
+To create a fabric project simply create a ~.fabric~ file in JSON format.
+
+This file contains a list of ~fabrics~ which are available sub commands to the fabric cli. i.e. ~fabric build~ where ~build~ is one of the fabrics.
+
+A fabric must contain either a ~command~ with ~args~ or a list of ~subfabrics~.
+
+
+Subfabrics are a collection of fabrics (that must exist within the .fabric project file).
+
+The example below contains 2 fabrics (build, clean) and a combination of the two using subfabrics:
+
+/NOTE: this example is based on a rust project/
+
+#+begin_src json
+{
+    "fabrics": [
+        {
+            "name": "build",
+            "command": "cargo",
+            "args": ["build"]
+        },
+        {
+            "name": "clean",
+            "command": "cargo",
+            "args": ["clean"]
+        },
+        {
+            "name": "rebuild",
+            "subfabrics": ["clean", "build"]
+        }
+    ]
+}
+#+end_src
+
+In this example ~fabric build~ will build the project and ~fabric clean~ will clean up deps and built files.
+
+Both of these can be run with a single command using ~fabric rebuild~ which runs the subfabrics in the given order.
+
+
+* Installation
+
+Currently fabric is not available on crates.io or any package manager which means you need to build it manually.
+
+** Dependencies
+
+only dependency is that you install [[https://rustup.rs][rustup]]. which comes with the cargo cli.
+
+/NOTE: after installing you still need to add the cargo bin to the $PATH variable. you can copy-paste the command at the end of installation output/
+
+** Building and installing
+
+Start by cloning the project:
+#+begin_src bash
+git clone https://github.com/jasonverbeek/fabric-rs
+cd fabric-rs
+#+end_src
+
+Next up we can build and/or install fabric with one of these commands:
+
+#+begin_src bash
+cargo build --release # to build without installing
+cargo install # to build and install
+#+end_src
+
+If you decided to run ~cargo build --release~ you can find ~fabric~ in the ~./target/release~ directory. you need to manually place this file somewhere accessible.
+
+However if you ran ~cargo install~ you can find ~fabric~ in the cargo bin dir, assuming you correctly installed rustup and modified the $PATH variable you can now use ~fabric~
