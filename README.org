@@ -1,4 +1,4 @@
-#+TITLE: Fabric 0.1.0 Beta
+#+TITLE: Fabric 0.2.0 Beta
 
 Fabric is a utility to simplify building processees across multiple languages.
 
@@ -6,7 +6,7 @@ Every language has it's own way to build/run the project and fabric aims to make
 
 * Fabric project config
 
-To create a fabric project simply create a ~.fabric~ file in JSON format.
+To create a fabric project run ~mk-fabric~ or simply create a ~.fabric~ file in JSON format.
 
 This file contains a list of ~fabrics~ which are available sub commands to the fabric cli. i.e. ~fabric build~ where ~build~ is one of the fabrics.
 

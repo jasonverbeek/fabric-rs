@@ -9,6 +9,7 @@ pub enum FabricError {
     NoFabricProject,
     NoAccessToFile,
     InvalidFabric,
+    InvalidSubFabric,
     ExecutionError,
 }
 
@@ -20,6 +21,7 @@ impl FabricError {
             Self::NoFabricProject => "Current directory is not a fabric project",
             Self::NoAccessToFile => ".fabric file exists but cannot be read.",
             Self::InvalidFabric => ".fabric file cannot be parsed. JSON not in expected structure.",
+            Self::InvalidSubFabric => "One or more of the subfabrics in .fabric doesnt exist",
             Self::ExecutionError => "Command failed to execute",
         }
     }
@@ -87,7 +89,7 @@ impl Fabric {
             if let Some(subfabrics) = &f.subfabrics {
                 for sf in subfabrics {
                     if let None = fabric.find_by_name(sf) {
-                        return Err(FabricError::InvalidFabric);
+                        return Err(FabricError::InvalidSubFabric);
                     }
                 }
             }
@@ -167,8 +169,8 @@ impl Fabric {
         let tasks: Vec<&Instruction> = self.expand_all(raw_tasks);
         for task in tasks {
             println!(
-                "{}: {} ({})",
-                "RUN".green().bold(),
+                "{} {} ({})",
+                "RUN".blue().bold(),
                 &task.name,
                 task.explain().italic()
             );

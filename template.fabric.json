@@ -1,0 +1,28 @@
+{
+    "fabrics": [
+        {
+            "name": "example-basic",
+            "command": "echo",
+            "args": ["basic example"]
+        },
+        {
+            "name": "example-hello",
+            "private": true,
+            "command": "echo",
+            "args": ["hello"]
+        },
+        {
+            "name": "example-world",
+            "private": true,
+            "command": "echo",
+            "args": ["world"]
+        },
+        {
+            "name": "example-hello-world",
+            "subfabrics": [
+                "example-hello",
+                "example-world"
+            ]
+        }
+    ]
+}

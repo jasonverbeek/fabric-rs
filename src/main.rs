@@ -25,12 +25,7 @@ fn fabricate() -> Result<()> {
             if &instr.private == &true {
                 continue;
             }
-            println!(
-                "{} {} - {}",
-                "fabric".bold(),
-                &instr.name.bold(),
-                instr.explain()
-            );
+            println!("{} {} - {}", "fabric", &instr.name.bold(), instr.explain());
         }
         // exit so we do not print the "done" message
         exit(0);
@@ -42,13 +37,13 @@ fn fabricate() -> Result<()> {
 }
 
 fn main() {
-    println!("Fabric version {}", VERSION);
+    println!("{} version {}", "fabric".green(), VERSION.yellow());
     println!();
 
     // attempt to fabricate the project and collect/handle errors in one place
     match fabricate() {
         Ok(_) => {
-            println!("{}: All fabrics completed!", "FIN".green().bold());
+            println!("{} All fabrics completed!", "OK".green().bold());
         }
         Err(e) => {
             eprintln!("{}", e);
