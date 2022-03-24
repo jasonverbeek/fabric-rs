@@ -1,21 +1,15 @@
 {
     "fabrics": [
         {
-            "name": "example-basic",
-            "command": "echo",
-            "args": ["basic example"]
-        },
-        {
             "name": "example-hello",
-            "private": true,
             "command": "echo",
-            "args": ["hello"]
+            "args": [ "hello" ]
         },
         {
             "name": "example-world",
             "private": true,
             "command": "echo",
-            "args": ["world"]
+            "args": [ "world" ]
         },
         {
             "name": "example-hello-world",
