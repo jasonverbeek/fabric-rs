@@ -1,6 +1,6 @@
 [package]
-name = "fabric-rs"
-version = "0.2.0"
+name = "fabric"
+version = "0.3.0"
 edition = "2021"
 default-run = "fabric"
 

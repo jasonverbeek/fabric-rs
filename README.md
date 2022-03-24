@@ -1,4 +1,4 @@
-# Fabric 0.2.0 Beta
+# Fabric 0.3.0 Beta
 
 Fabric is a utility to simplify building processees across multiple languages.
 

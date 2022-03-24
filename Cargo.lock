@@ -67,8 +67,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "fabric-rs"
-version = "0.2.0"
+name = "fabric"
+version = "0.3.0"
 dependencies = [
  "clap",
  "colored",

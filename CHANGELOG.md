@@ -2,7 +2,8 @@
 # 0.3.0
 
 - Added CHANGELOG.md
-- Made all command output consistent
+- Command output more consistent
+- Errors more helpful
 - Expanded documentation
 
 # 0.2.0

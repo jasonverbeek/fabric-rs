@@ -5,31 +5,19 @@ use serde::{Deserialize, Serialize};
 
 pub type Result<T> = std::result::Result<T, FabricError>;
 
-pub enum FabricError {
-    NoFabricProject,
-    NoAccessToFile,
-    InvalidFabric,
-    InvalidSubFabric,
-    ExecutionError,
+pub struct FabricError {
+    message: String,
 }
 
 impl FabricError {
-    // map enum to a basic error message
-    // NOTE that this doesn't allow for adding variables or custom text
-    pub fn value(&self) -> &'static str {
-        match *self {
-            Self::NoFabricProject => "Current directory is not a fabric project",
-            Self::NoAccessToFile => ".fabric file exists but cannot be read.",
-            Self::InvalidFabric => ".fabric file cannot be parsed. JSON not in expected structure.",
-            Self::InvalidSubFabric => "One or more of the subfabrics in .fabric doesnt exist",
-            Self::ExecutionError => "Command failed to execute",
-        }
+    pub fn new(message: String) -> Self {
+        return Self { message };
     }
 }
 
 impl fmt::Display for FabricError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {}", "ERR".red().bold(), self.value())
+        write!(f, "{} {}", "ERR".red().bold(), self.message)
     }
 }
 
@@ -71,25 +59,39 @@ impl Fabric {
     pub fn load_project(project_file: &'_ str) -> Result<Self> {
         // check if .fabric file exists
         if !Path::new(project_file).exists() {
-            return Err(FabricError::NoFabricProject);
+            return Err(FabricError::new(String::from(
+                "Current directory is not a fabric project",
+            )));
         }
 
         // read .fabric file into memory
-        let mut file = File::open(project_file).or(Err(FabricError::NoAccessToFile))?;
+        let mut file = File::open(project_file).or(Err(FabricError::new(format!(
+            "Could not read file '{}'",
+            project_file
+        ))))?;
         let mut content = String::new();
         file.read_to_string(&mut content)
-            .or(Err(FabricError::NoAccessToFile))?;
+            .or(Err(FabricError::new(format!(
+                "Could not read file '{}'",
+                project_file
+            ))))?;
 
         // decode json to a Fabric object/instance
         let fabric: Fabric =
-            serde_json::from_str(content.as_str()).or(Err(FabricError::InvalidFabric))?;
+            serde_json::from_str(content.as_str()).or(Err(FabricError::new(format!(
+                "'{}' cannot be parsed. JSON not in expected structure.",
+                project_file,
+            ))))?;
 
         // Validate subfabrics on .fabric file
         for f in &fabric.fabrics {
             if let Some(subfabrics) = &f.subfabrics {
                 for sf in subfabrics {
                     if let None = fabric.find_by_name(sf) {
-                        return Err(FabricError::InvalidSubFabric);
+                        return Err(FabricError::new(format!(
+                            "Subfabric '{}' does not exist",
+                            sf
+                        )));
                     }
                 }
             }
@@ -153,11 +155,23 @@ impl Fabric {
             let mut cmd = Command::new(command)
                 .args(args)
                 .spawn()
-                .or(Err(FabricError::ExecutionError))?;
+                .or(Err(FabricError::new(format!(
+                    "Could not start command '{} {}'",
+                    command,
+                    args.join(" ")
+                ))))?;
             // check wether exit was successful, if not stop execution of all Instructions
-            let exitcode = cmd.wait().or(Err(FabricError::ExecutionError))?;
+            let exitcode = cmd.wait().or(Err(FabricError::new(format!(
+                "Command '{} {}' failed",
+                command,
+                args.join(" ")
+            ))))?;
             if !exitcode.success() {
-                return Err(FabricError::ExecutionError);
+                return Err(FabricError::new(format!(
+                    "Command '{} {}' failed",
+                    command,
+                    args.join(" ")
+                )));
             }
         }
         // execution finished
