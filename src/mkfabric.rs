@@ -25,13 +25,13 @@ fn main() {
     let args = Arguments::parse();
     let path = Path::new(&args.filename);
     if !path.exists() {
-        eprintln!("{} '{}' doesn't exist", "ERROR".red(), args.filename);
+        eprintln!("{} '{}' doesn't exist", "ERR".red(), args.filename);
         return;
     }
     if path.is_file() {
         eprintln!(
             "{} '{}', is a file, not a directory",
-            "ERROR".red(),
+            "ERR".red(),
             args.filename
         );
         return;
@@ -39,18 +39,11 @@ fn main() {
     let fabric_file = path.join(".fabric"); // format!("{}/.fabric", &args.filename);
     let fabric_file_str = fabric_file.to_str().unwrap();
     if Path::new(&fabric_file).exists() {
-        eprintln!(
-            "{} This directory already has a .fabric file",
-            "ERROR".red()
-        );
+        eprintln!("{} This directory already has a .fabric file", "ERR".red());
         return;
     }
     fs::write(&fabric_file, TEMPLATE).unwrap_or_else(|_| {
-        eprintln!(
-            "{}: Unable to write to '{}'",
-            "ERROR".red(),
-            fabric_file_str
-        );
+        eprintln!("{} Unable to write to '{}'", "ERR".red(), fabric_file_str);
         return;
     });
     println!(

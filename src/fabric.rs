@@ -29,7 +29,7 @@ impl FabricError {
 
 impl fmt::Display for FabricError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}: {}", "ERR".red().bold(), self.value())
+        write!(f, "{} {}", "ERR".red().bold(), self.value())
     }
 }
 
