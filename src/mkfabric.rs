@@ -36,10 +36,10 @@ fn main() {
         );
         return;
     }
-    let fabric_file = path.join(".fabric"); // format!("{}/.fabric", &args.filename);
+    let fabric_file = path.join("fabric.json");
     let fabric_file_str = fabric_file.to_str().unwrap();
     if Path::new(&fabric_file).exists() {
-        eprintln!("{} This directory already has a .fabric file", "ERR".red());
+        eprintln!("{} This directory already has a fabric file", "ERR".red());
         return;
     }
     fs::write(&fabric_file, TEMPLATE).unwrap_or_else(|_| {
@@ -47,7 +47,7 @@ fn main() {
         return;
     });
     println!(
-        "{} Created .farbic file at '{}'",
+        "{} Created fabric file at '{}'",
         "OK".green().bold(),
         fabric_file_str
     );
