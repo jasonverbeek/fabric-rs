@@ -1,4 +1,12 @@
 
+# 1.0.0
+
+- instead of a `.fabric` file you now need a `fabric.json` (breaking change so
+major up)
+  - can easily upgrade with a `mv .fabric fabric.json`
+- removed images from documentation as they were inconsistent on different
+screen sizes.
+
 # 0.3.0
 
 - Added CHANGELOG.md
