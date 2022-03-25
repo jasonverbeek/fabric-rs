@@ -10,7 +10,7 @@ use fabric::{Fabric, Result};
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 fn fabricate() -> Result<()> {
-    let fabric: Fabric = Fabric::load_project("./.fabric")?;
+    let fabric: Fabric = Fabric::load_project("./fabric.json")?;
     let args: Vec<String> = env::args().skip(1).collect();
 
     // basic args parsing
